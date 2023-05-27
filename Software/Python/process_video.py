@@ -222,6 +222,7 @@ if __name__ == '__main__':
             # Approx for now
             screen_area_bgr = cropFrame(frame_bgr)
             #screen_area_bgr_blur = cv2.GaussianBlur(screen_area_bgr, (9, 9), 10)       # Gaussian experiments
+            
             screen_area_hsv = cv2.cvtColor(screen_area_bgr, cv2.COLOR_BGR2HSV)
             #screen_area_hsv = cv2.cvtColor(screen_area_bgr_blur, cv2.COLOR_BGR2HSV)
 
