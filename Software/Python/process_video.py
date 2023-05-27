@@ -21,13 +21,13 @@ try:
     import cv2
 except ModuleNotFoundError as err:
     print("Please install cv2. E.g. Run 'pip install opencv-python' in a terminal.")       # This will install numpy if not present.
-    exit(1)
+    # exit(1)
 
 try:
     import numpy as np
 except ModuleNotFoundError as err:
     print("Please install cv2. E.g. Run 'pip install numpy' in a terminal.")
-    exit(1)
+    # exit(1)
 
 try:
     from tqdm import tqdm

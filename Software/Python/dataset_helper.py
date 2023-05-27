@@ -15,13 +15,13 @@ import glob
 try:
     import cv2
 except ModuleNotFoundError as err:
-    print("Please install cv2. E.g. Run 'pip install opencv-python' in a Windows command shell.")       # This will install numpy if not present.
-    exit(1)
+    print("Please install cv2. E.g. Run 'pip install opencv-python' in a terminal.")       # This will install numpy if not present.
+    # exit(1)
 
 try:
     import numpy
 except ModuleNotFoundError as err:
-    print("Please install cv2. E.g. Run 'pip install numpy' in a Windows command shell.")
+    print("Please install cv2. E.g. Run 'pip install numpy' in a terminal.")
     exit(1)
 
 
