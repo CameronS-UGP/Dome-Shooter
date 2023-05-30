@@ -35,7 +35,7 @@ except ModuleNotFoundError as err:
     print("Please install cv2. E.g. Run 'pip install tqdm' in a terminal.")
     exit(1)
 
-video_filepath = './langham_dome_0987.mp4'                                      # Created using convert_video.py.
+video_filepath = 'data/langham_dome_0987.mp4'                                      # Created using convert_video.py.
 
 # The frame of interest in the video. The rest show things like the count down
 # before each session, or the aircraft information graphic etc.

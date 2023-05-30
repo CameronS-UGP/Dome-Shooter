@@ -47,14 +47,14 @@ class ReticleFinder:
     def ExtractTemplate(self):
 
         # Create a reticle template
-        self.template_image = self.ExtractLabelledArea('Snapshots/screen_area_4020.tiff')
+        self.template_image = self.ExtractLabelledArea('data/Snapshots/screen_area_4020.tiff')
 
         # Show template to be sure.
         #cv2.imshow('template', self.template_image)
         #cv2.waitKey(0)
 
         # Create a reticle mask
-        mask_image_bgr = self.ExtractLabelledArea('Snapshots_reticle_on_dark_screen/screen_area_2870.tiff')
+        mask_image_bgr = self.ExtractLabelledArea('data/Snapshots_reticle_on_dark_screen/screen_area_2870.tiff')
 
         # Show template to be sure.
         #cv2.imshow('mask_image_bgr', mask_image_bgr)
@@ -156,7 +156,7 @@ if __name__ == '__main__':
     # Read in an example image
     #
     # Use image_with_template for now.
-    image_filename = 'Snapshots/screen_area_4030.tiff'
+    image_filename = 'data/Snapshots/screen_area_4030.tiff'
     image = cv2.imread(image_filename)
 
     bFound, x, y = reticle_finder.SearchForReticle(image)
