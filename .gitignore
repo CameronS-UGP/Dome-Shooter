@@ -14,3 +14,5 @@ Software/Python/.idea/inspectionProfiles/profiles_settings.xml
 Software/Python/.idea/misc.xml
 Software/Python/.idea/inspectionProfiles/Project_Default.xml
 Software/Python/.idea/Python.iml
+Software/Python/__pycache__/dataset_helper.cpython-311.pyc
+Software/Python/__pycache__/reticle_finder.cpython-311.pyc
