@@ -188,11 +188,7 @@ OpenCV (Open Source Computer Vision) is an open-source library that provides a c
 \\\\
 From such research into computer vision techniques, OpenCV clearly presents itself as the most suitable for the detection of  objects projected on the screen. Its approachable and widely used nature indicates to prove it as a useful tool for the necessary image processing which will be an integral element in this project.
 
-
-\section{Overview}
-
-\textcolor{orange}{Note: Comprises setting scene of project tasks and tools}\\
-\textcolor{red}{Todo: Talk about why object detection is needed for the task}\\
+\section{Methodology}
 
 The key to the success of this project is to choose the correct object detection solution for the target and reticle, which may be require different methods. Considerations include:
 
@@ -214,108 +210,15 @@ It was obvious from the initial stages of the research that OpenCV was going to 
 
 Python seems to be well suited to machine learning and data analysis. OpenCV comprehensively supports Python and so for object detection, it should be a good choice. It is also ideally suited to the later mentioned Raspberry Pi pre-installed with Raspberry OS which is a Debian Linux based operating system and includes a recent distribution of Python.
 
-\subsection{Data}
-
-\textcolor{red}{>> Talking Points: Video is recorded on phone - (video of projected video). Film Grain. Intermissions. }
-
-\subsubsection{Screen Stabilising and Cropping}
-
-Because the video used was from a hand-held phone, the screen does move about a bit, albeit not abruptly. A solution could be implemented to automatically stabilise the screen within the image so that it can be more accurately cropped. For two reasons:
-\begin{itemize}
-	\item The size of the cropped area can be reduced, so less processing is required.
-	\item The whole frame would contain just the screen area, meaning the object detection would be easier.
-\end{itemize}
-
-The solution could also be able to automatically determine the screen area and crop to that, but that would probably mean each frame would be a slightly different size and require padding. The padding could be the screen edge pixels repeated, so this may actually be a better solution, although scaling may be an issue. The object detection should handle any reasonable screen wobble though and in any installed version of this, the real-time camera would be fixed. So a fixed crop is most likely sufficient.
-
-
-\section{Yellow Dot Detection}
-
-\subsection{Introduction}
-
-\textcolor{red}{>> Talking points: For score to be made, the target, yellow dot need detecting. }
-
-
-
-\subsection{Methodology}
+\subsection{Yellow Dot Detection}
 
 The yellow dot (target) is a good example of when colour detection techniques can be used. The yellow is significantly different to the other objects in the scenario and should therefore be easy to separate out. The proposed method, therefore, is to create a mask from the image, from pixels that are coloured in the appropriate yellow band. I.e. The mask will be set to 1 for pixels that are in the required (yellow) colour range, and to 0 otherwise. A bounding technique can then be used to find the dot(s). Any boxes that are outside the expected size range will be discarded. OpenCV provides functions to do both the masking (\verb|inRange|) and the bounding box finding (\verb|findContours|).
-\\
+
 To evaluate the results, a set of images with the yellow dots identified in a set of label/annotation files could be provided. The above algorithm will be then run on all these files and check that the correct number of yellow dots are identified, and the distance between the expected centres and detected centres are below a (low) threshold. This could be plotted on a graph with the y-axis showing the distance between the centres and the x-axis showing the image number, although the best way to do this when there are false positives and multiple yellow dots may require some experiment. This mechanism could also be used to automatically test the program whenever changes are made.
 \\
+\textcolor{red}{>> Todo: Evaluation and include graph}
 
-\subsection{Implementation}
-
-The colour selection was made in two passes.
-\begin{enumerate}
-	\item A number of frames were saved to individual image files, and then examined manually using a drawing app (e.g. Paint). Once a set of colours were found, the darkest and lightest were chosen.
-	\item Then the video was converted to a mask based on this colour range and the mask observed. Adjustments were made to the colour range until the yellow dot was reliably detected for all frames it was present in.
-\end{enumerate}
-\noindent
-Saving an image to a file is trivial using OpenCV:
-\begin{verbatim}
-	output_file = f'screen_area_{frame_number}.tiff'
-	cv2.imwrite(output_file, screen_area_bgr)
-\end{verbatim}
-This only needed performing once.
-\\\\
-Originally this process was done in BGR, which was reasonably reliable but not good enough. So the HSV (hue, saturation, value) colour space was tried and this produced much better results, although false positives are still seen.
-\begin{verbatim}
-	screen_area_hsv = cv2.cvtColor(screen_area_bgr,
-	cv2.COLOR_BGR2HSV)
-\end{verbatim}
-Next the colour range was used to produce a binary colour mask, which was displayed alongside the true video. This clearly showed how well the detection was performing. Note that the HSV needs to be able to fit into an 8-bit representation. So for hue this means the normal 360 value is halved, to be in the range 0 to just under 180. For saturation and value, they fit into the range 0 - 255, whereas normally they are a percentage or normalised fraction.
-\begin{verbatim}
-	lower_yellow_dot = np.array([20,50,160], dtype = "uint16")
-	upper_yellow_dot = np.array([45,150,220], dtype = "uint16")
-	yellow_dot_mask = cv2.inRange(screen_area_hsv,
-	lower_yellow_dot,
-	upper_yellow_dot)
-	cv2.imshow('yellow_dot_mask', yellow_dot_mask)
-\end{verbatim}
-\noindent
-The last line shows the mask and is not normally present in the main loop.
-
-The mask can be used to find the yellow dots, by running a contour finding algorithm. Instead of designing our own, multiple fast algorithms already exist, one of which is currently included in OpenCV \citep{SUZUKI198532}.
-\begin{verbatim}
-	contours, _ = cv2.findContours(yellow_dot_mask,
-	cv2.RETR_TREE,
-	cv2.CHAIN_APPROX_SIMPLE)
-	for c in contours:
-	x, y, w, h = cv2.boundingRect(c)
-	if 10 <= w <= 30 and 10 <= h <= 30 and (w/h > 0.8 or h/w > 0.8):
-	cv2.circle(screen_area_bgr, (x+int(w/2), y+int(h/2)), 1,
-	(0,0,255), 1)
-	cv2.rectangle(screen_area_bgr, (x-5, y-5),
-	(x + w + 5, y + h + 5),(0,0,255), 1)
-\end{verbatim}
-\textcolor{red}{>> Todo: Describe RETR\_TREE and CHAIN\_APPROX\_SIMPLE and reasons for choosing them.}\\
-
-To remove (some of) the false positives the results are filtered as shown. The w and h must be in the range 10-30 pixels. In addition, they need to be within 80\% of each other, to yield only (roughly) square shapes. The dots should be circular, but after detection, they may not be. For development, the bounding boxes and centre of the detections are drawn in red and overlaid on the video feed.\\
-\textcolor{red}{>> Todo: Include figures of testing boxes}
-
-\subsection{Evaluation}
-
-During the development of this algorithm, the testing of the detection was simply done by observation. 
-
-Evaluating the algorithms ability to detect the yellow dots in the video will be performed by assess two main criteria: effectiveness and accuracy. For 
-
-
-\subsection{Summary}
-
-This requires more work to remove the false positives. Some of this may simply be down to the poor quality video used. If not then perhaps cross-correlation with a template and/or mask could be used. That should be sufficient, because the aircraft and yellow dot do not overlap and the reticle is a less prominent colour and probably won't interfere with the detection. We would need to ensure that the template includes a ring of screen colour around the yellow dot, to ensure the shape is included in the correlation, otherwise a large area of yellow would give lots of results, when only the round yellow dots should be detected.
-
-Gaussian blur was tried to improve matters, but did not seem to help significantly.   \textcolor{red}{>> Todo: Try Morphological Transformations}.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Reticle Detection}
-
-\subsection{Introduction}
-
-
-
-\subsection{Methodology}
+\subsection{Reticle Detection}
 
 The colour of the reticle is very close to the screen background and is also obscured by aircraft and the yellow dot. So using a simple colour masking technique is unlikely to be appropriate. The first approach would be to use a sliding window technique and cross-correlate a template based on a relatively clean cropped image of the reticle. Remarkably, OpenCV is able to provide both of this functionality in a single function: \verb|matchTemplate()|. This function enables the choice of a correlation algorithm. In particular normalised and non-normalised cross-correlation and correlation-coefficient, seem the most appropriate.
 
@@ -326,55 +229,6 @@ Experimentation will determine the best one in this scenario. Some of the algori
 \noindent
 \textcolor{red}{>> Todo: Evaluation and include graph}\\
 If correlation fails to detect the reticle or produces false positives then a machine learning approach may need to be considered. OpenCV provides ways to train a neural network or the weights from a pre-trained model could be used, for example YOLOv7 includes a large community-created dataset. \textcolor{red}{>> Todo: Explain YOLOv7}
-
-\subsection{Implementation}
-
-Cross correlation against a template image is used to detect the reticle. A suitable reticle template was extracted from a frame, by cropping the image and saving it to a file. Like the yellow dot colour range, this was also done empirically.
-
-\noindent
-\textcolor{red}{>> Todo: Put template image here}\noindent
-
-OpenCV provides a function to use correlation to match a template to an image.
-\begin{verbatim}
-	match_result = cv2.matchTemplate(image,
-	template_image,
-	cv2.TM_CCOEFF_NORMED)
-\end{verbatim}
-
-What is returned is a 2 dimensional nparray containing the correlation results for each position of the sliding window. The above snippet shows that the normalised correlation coefficient algorithm was selected. This algorithm does not require a mask to go with the template image.
-
-To obtain the best result we find the location with the highest result:
-\begin{verbatim}
-	min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(match_result)
-\end{verbatim}
-
-Note that \verb|min_loc| and \verb|max_loc| refer to the top left position of sliding window, so we need to adjust that to be the centre of the window.
-
-The threshold was obtained by saving all the \verb|max_val| values to an array and then presenting them as a graph at the end of the video.
-\begin{verbatim}
-	def PrintMaxValGraph():
-	plt.hist(max_vals, bins=10)
-	plt.show()
-\end{verbatim}
-\noindent
-\verb|PrintMaxValGraph()| is called when the main loop is completed.
-
-\noindent
-\textcolor{red}{>> Todo: Try YOLOv7}
-
-\subsection{Evaluation}
-
-\textcolor{red}{>> Todo}
-
-\subsection{Summary}
-
-\textcolor{red}{>> Todo}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{System}
-
-\textcolor{red}{>> Todo: Explain the system as a whole}
 
 \subsection{Scoring}
 
@@ -407,9 +261,6 @@ it is a very versatile platform and can work in conjunction with multiple compon
 complete the task. A camera will also be required in order to capture the screen (i.e. the inside wall of the dome) onto which the yellow dots and the reticle are projected.
 
 Should it be possible to take physical reading from the trigger by connecting to it, the hardware will additionally comprise of some minor electronics that will be connected to the GPIO pins of the Raspberry Pi.
-
-
-\\\\\\\\\\\\\\\\\\\\\\\\ %OLD%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Implementation and Evaluation}
 
@@ -457,6 +308,91 @@ To avoid processing more than necessary to, a crude size reduction method was em
 \noindent
 A new frame image, \verb|screen_area_bgr|, is extracted from \verb|frame_bgr|. The values were obtained empirically.
 
+\subsubsection{Yellow Dot Detection}
+
+The colour selection was made in two passes.
+\begin{enumerate}
+	\item A number of frames were saved to individual image files, and then examined manually using a drawing app (e.g. Paint). Once a set of colours were found, the darkest and lightest were chosen.
+	\item Then the video was converted to a mask based on this colour range and the mask observed. Adjustments were made to the colour range until the yellow dot was reliably detected for all frames it was present in.
+\end{enumerate}
+\noindent
+Saving an image to a file is trivial using OpenCV:
+\begin{verbatim}
+output_file = f'screen_area_{frame_number}.tiff'
+cv2.imwrite(output_file, screen_area_bgr)
+\end{verbatim}
+This only needed performing once.
+\\\\
+Originally this process was done in BGR, which was reasonably reliable but not good enough. So the HSV (hue, saturation, value) colour space was tried and this produced much better results, although false positives are still seen.
+\begin{verbatim}
+	        screen_area_hsv = cv2.cvtColor(screen_area_bgr,
+	                                       cv2.COLOR_BGR2HSV)
+\end{verbatim}
+Next the colour range was used to produce a binary colour mask, which was displayed alongside the true video. This clearly showed how well the detection was performing. Note that the HSV needs to be able to fit into an 8-bit representation. So for hue this means the normal 360 value is halved, to be in the range 0 to just under 180. For saturation and value, they fit into the range 0 - 255, whereas normally they are a percentage or normalised fraction.
+\begin{verbatim}
+	lower_yellow_dot = np.array([20,50,160], dtype = "uint16")
+	upper_yellow_dot = np.array([45,150,220], dtype = "uint16")
+	yellow_dot_mask = cv2.inRange(screen_area_hsv,
+	                              lower_yellow_dot,
+	                              upper_yellow_dot)
+	cv2.imshow('yellow_dot_mask', yellow_dot_mask)
+\end{verbatim}
+\noindent
+The last line shows the mask and is not normally present in the main loop.
+
+The mask can be used to find the yellow dots, by running a contour finding algorithm. Instead of designing our own, multiple fast algorithms already exist, one of which is currently included in OpenCV \citep{SUZUKI198532}.
+\begin{verbatim}
+	contours, _ = cv2.findContours(yellow_dot_mask,
+	cv2.RETR_TREE,
+	cv2.CHAIN_APPROX_SIMPLE)
+	for c in contours:
+	x, y, w, h = cv2.boundingRect(c)
+	if 10 <= w <= 30 and 10 <= h <= 30 and (w/h > 0.8 or h/w > 0.8):
+	cv2.circle(screen_area_bgr, (x+int(w/2), y+int(h/2)), 1,
+	           (0,0,255), 1)
+	cv2.rectangle(screen_area_bgr, (x-5, y-5),
+	              (x + w + 5, y + h + 5),(0,0,255), 1)
+\end{verbatim}
+\textcolor{red}{>> Todo: Describe RETR\_TREE and CHAIN\_APPROX\_SIMPLE and reasons for choosing them.}\\
+
+To remove (some of) the false positives the results are filtered as shown. The w and h must be in the range 10-30 pixels. In addition, they need to be within 80\% of each other, to yield only (roughly) square shapes. The dots should be circular, but after detection, they may not be. For development, the bounding boxes and centre of the detections are drawn in red and overlaid on the video feed.\\
+\textcolor{red}{>> Todo: Include figures of testing boxes}
+
+\subsubsection{Reticle Detection}
+
+Cross correlation against a template image is used to detect the reticle. A suitable reticle template was extracted from a frame, by cropping the image and saving it to a file. Like the yellow dot colour range, this was also done empirically.
+
+\noindent
+\textcolor{red}{>> Todo: Put template image here}\noindent
+
+OpenCV provides a function to use correlation to match a template to an image.
+\begin{verbatim}
+	match_result = cv2.matchTemplate(image,
+	                                 template_image,
+	                                 cv2.TM_CCOEFF_NORMED)
+\end{verbatim}
+
+What is returned is a 2 dimensional nparray containing the correlation results for each position of the sliding window. The above snippet shows that the normalised correlation coefficient algorithm was selected. This algorithm does not require a mask to go with the template image.
+
+To obtain the best result we find the location with the highest result:
+\begin{verbatim}
+	min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(match_result)
+\end{verbatim}
+
+Note that \verb|min_loc| and \verb|max_loc| refer to the top left position of sliding window, so we need to adjust that to be the centre of the window.
+
+The threshold was obtained by saving all the \verb|max_val| values to an array and then presenting them as a graph at the end of the video.
+\begin{verbatim}
+	def PrintMaxValGraph():
+	    plt.hist(max_vals, bins=10)
+	    plt.show()
+\end{verbatim}
+\noindent
+\verb|PrintMaxValGraph()| is called when the main loop is completed.
+
+\noindent
+\textcolor{red}{>> Todo: Try YOLOv7}
+
 \subsubsection{User Interface}
 
 \textcolor{red}{>> Todo}
@@ -490,7 +426,27 @@ The most significant problem was the failure to detect all the reticles, especia
 \\
 Another problem was the false positives when detecting the yellow dots. This may well be down to video quality. Particularly in the last session, the 'shadow' after the aircraft seemed to contain similar colours to the yellow dots, resulting in the algorithm detection this.
 
-\section{Conclusion}
+\section{Conclusion and Future Work}
+
+\subsection{Yellow Dot Detection}
+
+This requires more work to remove the false positives. Some of this may simply be down to the poor quality video used. If not then perhaps cross-correlation with a template and/or mask could be used. That should be sufficient, because the aircraft and yellow dot do not overlap and the reticle is a less prominent colour and probably won't interfere with the detection. We would need to ensure that the template includes a ring of screen colour around the yellow dot, to ensure the shape is included in the correlation, otherwise a large area of yellow would give lots of results, when only the round yellow dots should be detected.
+
+Gaussian blur was tried to improve matters, but did not seem to help significantly. \textcolor{red}{>> Todo: Try Morphological Transformations}.
+
+\subsection{Reticle Detection}
+
+\textcolor{red}{>> Todo}
+
+\subsection{Screen Stabilising and Cropping}
+
+Because the video used was from a hand-held phone, the screen does move about a bit, albeit not abruptly. A solution could be implemented to automatically stabilise the screen within the image so that it can be more accurately cropped. For two reasons:
+\begin{itemize}
+	\item The size of the cropped area can be reduced, so less processing is required.
+	\item The whole frame would contain just the screen area, meaning the object detection would be easier.
+\end{itemize}
+
+The solution could also be able to automatically determine the screen area and crop to that, but that would probably mean each frame would be a slightly different size and require padding. The padding could be the screen edge pixels repeated, so this may actually be a better solution, although scaling may be an issue. The object detection should handle any reasonable screen wobble though and in any installed version of this, the real-time camera would be fixed. So a fixed crop is most likely sufficient.
 
 
 \clearpage
