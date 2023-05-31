@@ -216,7 +216,7 @@ Python seems to be well suited to machine learning and data analysis. OpenCV com
 
 \subsection{Data}
 
-\textcolor{red}{>> Talking Points: Video is recorded on phone - (video of projected video). Film Grain. Intermissions. }
+\textcolor{red}{>> Talking Points: Video is recorded on phone - (video of projected video). Film Grain. Intermissions. Scrnshts}
 
 \subsubsection{Screen Stabilising and Cropping}
 
@@ -240,8 +240,6 @@ The solution could also be able to automatically determine the screen area and c
 \subsection{Methodology}
 
 The yellow dot (target) is a good example of when colour detection techniques can be used. The yellow is significantly different to the other objects in the scenario and should therefore be easy to separate out. The proposed method, therefore, is to create a mask from the image, from pixels that are coloured in the appropriate yellow band. I.e. The mask will be set to 1 for pixels that are in the required (yellow) colour range, and to 0 otherwise. A bounding technique can then be used to find the dot(s). Any boxes that are outside the expected size range will be discarded. OpenCV provides functions to do both the masking (\verb|inRange|) and the bounding box finding (\verb|findContours|).
-\\
-To evaluate the results, a set of images with the yellow dots identified in a set of label/annotation files could be provided. The above algorithm will be then run on all these files and check that the correct number of yellow dots are identified, and the distance between the expected centres and detected centres are below a (low) threshold. This could be plotted on a graph with the y-axis showing the distance between the centres and the x-axis showing the image number, although the best way to do this when there are false positives and multiple yellow dots may require some experiment. This mechanism could also be used to automatically test the program whenever changes are made.
 \\
 
 \subsection{Implementation}
@@ -299,13 +297,18 @@ To remove (some of) the false positives the results are filtered as shown. The w
 During the development of this algorithm, the testing of the detection was simply done by observation. 
 
 Evaluating the algorithms ability to detect the yellow dots in the video will be performed by assess two main criteria: effectiveness and accuracy. For 
+\\
+\textcolor{red}{>> Todo: Rewrite below paragraph to describe evaluation method used}\\
+
+To evaluate the results, a set of images with the yellow dots identified in a set of label/annotation files could be provided. The above algorithm will be then run on all these files and check that the correct number of yellow dots are identified, and the distance between the expected centres and detected centres are below a (low) threshold. This could be plotted on a graph with the y-axis showing the distance between the centres and the x-axis showing the image number, although the best way to do this when there are false positives and multiple yellow dots may require some experiment. This mechanism could also be used to automatically test the program whenever changes are made.
 
 
 \subsection{Summary}
 
 This requires more work to remove the false positives. Some of this may simply be down to the poor quality video used. If not then perhaps cross-correlation with a template and/or mask could be used. That should be sufficient, because the aircraft and yellow dot do not overlap and the reticle is a less prominent colour and probably won't interfere with the detection. We would need to ensure that the template includes a ring of screen colour around the yellow dot, to ensure the shape is included in the correlation, otherwise a large area of yellow would give lots of results, when only the round yellow dots should be detected.
 
-Gaussian blur was tried to improve matters, but did not seem to help significantly.   \textcolor{red}{>> Todo: Try Morphological Transformations}.
+Gaussian blur was tried to improve matters, but did not seem to help significantly.\\
+\textcolor{red}{>> Todo: Try Morphological Transformations}.\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
