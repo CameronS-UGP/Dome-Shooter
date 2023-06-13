@@ -54,6 +54,7 @@ useful_frame_ranges = [(1, 410), (570, 770), (1160, 1860), (2060, 2865), (3335, 
 #useful_frame_ranges = [(570, 770)]
 #useful_frame_ranges = [(3940, 4355)]
 #useful_frame_ranges = [(4200, 4355)]
+# useful_frame_ranges = [(2060, 2865), (3335, 3785), (3940, 4355)]
 
 
 #-------------------------------------------------------------------------------
@@ -115,7 +116,7 @@ def cropFrame(frame):
 # image             Cropped image to dump
 # frame_number      Frame number of image.
 def dumpFrame(image, frame_number):
-    output_file = f'screen_area_{frame_number}.tiff'
+    output_file = f'data/eval/screen_area_{frame_number}.tiff'
     if os.path.exists(output_file):
         os.remove(output_file)
     print(f'Writing {output_file}...')
@@ -123,23 +124,27 @@ def dumpFrame(image, frame_number):
 
 
 #-------------------------------------------------------------------------------
-# Dump every 10th frame starting at 2500. Used to build up a dataset of reticles.
+# Dump every nth frame starting at a specified frame. Used to build up a dataset of reticles or for evaluation.
+# [(2060, 2865), (3335, 3785), (3940, 4355)]
 def dumpFrames():
     cap, num_frame = openVideoFile(video_filepath)
-    frame_number_step10 = 2500
+    frame_number_to_dump = 3940 #Variable for frame to be dumped with each step
+    step_size = 25 #How many frames are skipped
     frame_number = 0
     while(cap.isOpened()):
         ret, frame_bgr = cap.read()
         if ret:
             frame_number += 1
         else:
-            print(f'Number of frames processed: {frame_number} / {num_frames}')
+            print(f'Number of frames processed: {frame_number} / {num_frame}')
             break
 
-        if frame_number == frame_number_step10:
-            screen_area_bgr = cropFrame(frame_bgr)
-            dumpFrame(screen_area_bgr, frame_number)
-            frame_number_step10 += 10
+        if frameNumberInRange(frame_number):
+
+            if frame_number == frame_number_to_dump:
+                screen_area_bgr = cropFrame(frame_bgr)
+                dumpFrame(screen_area_bgr, frame_number)
+                frame_number_to_dump += step_size
 
 
 #-------------------------------------------------------------------------------
@@ -197,8 +202,8 @@ def findReticle(reticle_finder, screen_area_bgr):
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
 
-    #dumpFrames()            # One-off call to dump every 10th frame starting at 2500. So we can build up a dataset of reticles.
-    #exit(0)
+    # dumpFrames()            # One-off call to dump every 10th frame starting at 2500. So we can build up a dataset of reticles.
+    # exit(0)
 
 
     reticle_finder = rf.ReticleFinder()
@@ -211,7 +216,7 @@ if __name__ == '__main__':
         ret, frame_bgr = cap.read()
         if ret:
             frame_number += 1
-            progress_bar.update(1)
+            # progress_bar.update(1)
         else:
             print(f'Number of frames processed: {frame_number} / {num_frames}')
             break
@@ -228,6 +233,7 @@ if __name__ == '__main__':
 
             # Detect the yellow dots.
             yellow_dot_bboxes = findYellowDots(screen_area_hsv)
+            print("YellDot Test: ", yellow_dot_bboxes)
 
             # Detect reticle
             bFound, reticle_x, reticle_y  = findReticle(reticle_finder, screen_area_bgr)
