@@ -233,11 +233,13 @@ if __name__ == '__main__':
 
             # Detect the yellow dots.
             yellow_dot_bboxes = findYellowDots(screen_area_hsv)
-            print("YellDot Test: ", yellow_dot_bboxes)
+            print("YellDot: ", yellow_dot_bboxes)
 
             # Detect reticle
             bFound, reticle_x, reticle_y  = findReticle(reticle_finder, screen_area_bgr)
-            if bFound: #Draws circle around detected reticle
+
+            # Draws circle around detected reticle (and centre dot)
+            if bFound:
                 cv2.circle(screen_area_bgr, (reticle_x, reticle_y), 1, (255,0,0), 1)
                 cv2.circle(screen_area_bgr, (reticle_x, reticle_y), 200, (255,0,0), 1)
 
