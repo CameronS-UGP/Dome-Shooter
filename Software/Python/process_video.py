@@ -230,6 +230,8 @@ if __name__ == '__main__':
     #create ReticleFinder object
     reticle_finder = rf.ReticleFinder()
 
+    bFound_changed = False
+
     cap, num_frames = openVideoFile(video_filepath)
     frame_number = 0
     progress_bar = tqdm(total=num_frames)                                       # Show a nice progress bar as we work through the video file.
@@ -278,27 +280,38 @@ if __name__ == '__main__':
 
             # Draws circle around detected reticle (and centre dot)
             # print(bFound)
+
+            if bFound_changed != bFound:
+                bFound_changed = True
+            else:
+                bFound_changed = False
+
+            # print(f"bFound {bFound} vs bFound_changed {bFound_changed}")
+            bFound_changed = True  # For Testing
+
             if bFound:
+
                 cv2.circle(screen_area_bgr, (reticle_x, reticle_y), 1, (255,0,0), 1)
                 cv2.circle(screen_area_bgr, (reticle_x, reticle_y), 200, (255,0,0), 1)
 
-                #Scoring
-                distances = []
-                hit_flag = False
-                for yellow_dot in yellow_dot_bboxes:
-                    yell_x = yellow_dot[0]
-                    yell_y = yellow_dot[1]
+                if bFound_changed:
+                    #Scoring
+                    distances = []
+                    hit_flag = False
+                    for yellow_dot in yellow_dot_bboxes:
+                        yell_x = yellow_dot[0]
+                        yell_y = yellow_dot[1]
 
-                    dist = eval.calculateDistance(yell_x, yell_y, reticle_x, reticle_y)
-                    print(f"Distance: {dist}")
-                    if dist < hit_thresh:
-                        hit_flag = True
-                        print("HIT")
+                        dist = eval.calculateDistance(yell_x, yell_y, reticle_x, reticle_y)
+                        # print(f"Distance: {dist}")
+                        if dist < hit_thresh:
+                            hit_flag = True
+                            print("HIT")
+                    if not hit_flag and distances:
+                        print(f"MISS\nYou were {min(distances) - hit_thresh} off target")
+                    elif not hit_flag and not distances:
+                        print("MISS: No target reachable at this distance")
 
-                if not hit_flag and distances:
-                    print(f"MISS\nYou were {min(distances) - hit_thresh} off target")
-                elif not hit_flag and not distances:
-                    print("MISS: No target reachable at this distance")
 
             # Draw rectangles around yellow dots (with 5 pixel margin), with a centre dot, in red.
             spc = 0
