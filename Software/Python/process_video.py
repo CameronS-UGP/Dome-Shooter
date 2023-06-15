@@ -59,7 +59,7 @@ useful_frame_ranges = [(1, 410), (570, 770), (1160, 1860), (2060, 2865), (3335, 
 useful_frame_ranges = [(2060, 2865), (3335, 3785), (3940, 4355)]
 # useful_frame_ranges = [(2500, 2865), (3335, 3785), (3940, 4355)]
 
-
+hit_thresh = 18
 
 #-------------------------------------------------------------------------------
 # Function to determine if a frame number is useful. I.e. is it in useful_frame_ranges.
@@ -225,6 +225,8 @@ if __name__ == '__main__':
     yellow_gt_table = []
     reticle_gt_table = []
 
+    reticle_acc_table = []
+
     #create ReticleFinder object
     reticle_finder = rf.ReticleFinder()
 
@@ -262,20 +264,41 @@ if __name__ == '__main__':
             is_eval_frame, obj_index = checkForEvalFrame(frame_number, eval_indexes) # Check if current frame has annotations made for it (for GT)
 
             if is_eval_frame:
-                print(f"Found an eval frame on #{frame_number}")
+                # print(f"Found an eval frame on #{frame_number}")
                 current_eval_object = eval_frames[obj_index]
 
                 assert current_eval_object.getFNum() == frame_number # Robustness: making sure the correct evalFrame object is retrieved
 
-                yellow_gt_score, reticle_gt_score = current_eval_object.evaluateFrame(yellow_dot=yellow_dot_bboxes, reticle_t=bFound, reticle_coords=(reticle_x, reticle_y))
+                yellow_gt_score, reticle_gt_score, yellow_acc_score, reticle_acc_score = current_eval_object.evaluateFrame(yellow_dot=yellow_dot_bboxes, reticle_t=bFound, reticle_coords=(reticle_x, reticle_y))
 
                 yellow_gt_table.append(yellow_gt_score)
                 reticle_gt_table.append(reticle_gt_score)
 
+                reticle_acc_table.append(reticle_acc_score)
+
             # Draws circle around detected reticle (and centre dot)
+            # print(bFound)
             if bFound:
                 cv2.circle(screen_area_bgr, (reticle_x, reticle_y), 1, (255,0,0), 1)
                 cv2.circle(screen_area_bgr, (reticle_x, reticle_y), 200, (255,0,0), 1)
+
+                #Scoring
+                distances = []
+                hit_flag = False
+                for yellow_dot in yellow_dot_bboxes:
+                    yell_x = yellow_dot[0]
+                    yell_y = yellow_dot[1]
+
+                    dist = eval.calculateDistance(yell_x, yell_y, reticle_x, reticle_y)
+                    print(f"Distance: {dist}")
+                    if dist < hit_thresh:
+                        hit_flag = True
+                        print("HIT")
+
+                if not hit_flag and distances:
+                    print(f"MISS\nYou were {min(distances) - hit_thresh} off target")
+                elif not hit_flag and not distances:
+                    print("MISS: No target reachable at this distance")
 
             # Draw rectangles around yellow dots (with 5 pixel margin), with a centre dot, in red.
             spc = 0

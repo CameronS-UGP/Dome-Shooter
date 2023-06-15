@@ -1,5 +1,7 @@
 # Class and functions for evaluating detection methods
 # Also includes function for calculating distance between two points
+from math import dist as eucDist
+
 
 class EvalFrame:
 
@@ -36,8 +38,26 @@ class EvalFrame:
 
         yellow_gt_score, reticle_gt_score = groundTruth(len(f_yellow_dots), len(s_yellow_dots), f_reticle_truth, s_reticle_truth)
 
-        return yellow_gt_score, reticle_gt_score
+        yellow_acc_score = yellowAcc(f_yellow_dots, s_yellow_dots)
+        reticle_acc_score = reticleAcc(f_reticle_coords, s_reticle_coords)
 
+        return yellow_gt_score, reticle_gt_score, yellow_acc_score, reticle_acc_score
+
+def reticleAcc(f_reticle_coords, s_reticle_coords):
+    x_f = f_reticle_coords[0]
+    y_f = f_reticle_coords[1]
+
+    x_s = s_reticle_coords[0]
+    y_s = s_reticle_coords[1]
+
+    distance = calculateDistance(x_f, y_f, x_s, y_s)
+    return distance
+
+
+def yellowAcc(f_yellow_dots, s_yellow_dots):
+    # it is difficult to decide on a method that can take the lists of both found and GT coords, which may not be in the
+    # same order, therefore it would not compare correctly.
+    return None
 
 def groundTruth(f_yellow_dot_count, s_yellow_dot_count, f_reticle_truth, s_reticle_truth):
     yellow_gt_score = False
@@ -59,6 +79,15 @@ def percentageFromBools(booList):
     perc = frac * 100
     return round(perc,2)
 
-# Calculates distance between two given coords
+# Calculates the Euclidean distance between two given coords
 def calculateDistance(x_A, y_A, x_B, y_B):
-    pass
+    a_coords = (x_A, y_A)
+    b_coords = (x_B, y_B)
+
+    return eucDist(a_coords, b_coords)
+
+if __name__ == "__main__":
+    p = (56,-12313)
+    q = (22,4)
+
+    print(calculateDistance(p[0],p[1],q[0],q[1]))
