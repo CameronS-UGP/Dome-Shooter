@@ -54,9 +54,9 @@ useful_frame_ranges = [(1, 410), (570, 770), (1160, 1860), (2060, 2865), (3335, 
 # useful_frame_ranges = [(2060, 2865), (3335, 3785), (3940, 4355)]
 #useful_frame_ranges = [(2060, 2863)]
 #useful_frame_ranges = [(570, 770)]
-#useful_frame_ranges = [(3940, 4355)]
-#useful_frame_ranges = [(4200, 4355)]
-useful_frame_ranges = [(2060, 2865), (3335, 3785), (3940, 4355)]
+# useful_frame_ranges = [(3940, 4355)]
+# useful_frame_ranges = [(4200, 4355)]
+# useful_frame_ranges = [(2060, 2865), (3335, 3785), (3940, 4355)]
 # useful_frame_ranges = [(2500, 2865), (3335, 3785), (3940, 4355)]
 
 hit_thresh = 18
@@ -227,6 +227,8 @@ if __name__ == '__main__':
 
     reticle_acc_table = []
 
+    score_table = []
+
     #create ReticleFinder object
     reticle_finder = rf.ReticleFinder()
 
@@ -307,10 +309,13 @@ if __name__ == '__main__':
                         if dist < hit_thresh:
                             hit_flag = True
                             print("HIT")
+                            score_table.append("HIT")
                     if not hit_flag and distances:
                         print(f"MISS\nYou were {min(distances) - hit_thresh} off target")
+                        score_table.append("MISS")
                     elif not hit_flag and not distances:
                         print("MISS: No target reachable at this distance")
+                        score_table.append("MISS")
 
 
             # Draw rectangles around yellow dots (with 5 pixel margin), with a centre dot, in red.
@@ -335,6 +340,12 @@ if __name__ == '__main__':
 
     print(f"Yellow GT: {eval.percentageFromBools(yellow_gt_table)}", yellow_gt_table)
     print(f"Reticle GT: {eval.percentageFromBools(reticle_gt_table)}", reticle_gt_table)
+
+    hits = score_table.count("HIT")
+    score = hits / len(score_table) * 100
+    score = round(score, 2)
+
+    print(f"Your score was {score} points out of 100.")
 
 
     # reticle_finder.PrintMaxValGraph()                                           # Print reticle max_val graph.
