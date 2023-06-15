@@ -65,8 +65,8 @@ class ReticleFinder:
         lower_reticle = np.array([130,70,120], dtype = "uint16")
         upper_reticle = np.array([255,111,205], dtype = "uint16")
         self.reticle_mask = cv2.inRange(mask_image_hsv, lower_reticle, upper_reticle)
-        cv2.imshow('reticle_mask', self.reticle_mask)                                # For development.
-        cv2.waitKey(0)
+        # cv2.imshow('reticle_mask', self.reticle_mask)                                # For development.
+        # cv2.waitKey(0)
 
 
     #-------------------------------------------------------------------------------
@@ -99,8 +99,8 @@ class ReticleFinder:
         image_copy = copy.copy(image)
         cv2.circle(image_copy, (label.x_centre, label.y_centre), 1, (255,0,0), 1)
         cv2.rectangle(image_copy, (x1, y1), (x2, y2), (255,0,0), 1)
-        cv2.imshow(image_filename, image_copy)
-        cv2.waitKey(0)
+        # cv2.imshow(image_filename, image_copy)
+        # cv2.waitKey(0)
 
         return cropped_image
 
@@ -123,7 +123,10 @@ class ReticleFinder:
         #match_result = cv2.matchTemplate(image, self.template_image, cv2.TM_CCORR_NORMED, mask=???)
         #match_result = cv2.matchTemplate(image, self.template_image, cv2.TM_CCOEFF, mask=self.reticle_mask)
         match_result = cv2.matchTemplate(image, self.template_image, cv2.TM_CCOEFF_NORMED)  # Cannot take a mask
-        cv2.imshow('match_result', match_result)
+
+        # print("Match Result  ", match_result)
+
+        # cv2.imshow('match_result', match_result)
         #cv2.waitKey(0)
 
         #

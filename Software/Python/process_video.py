@@ -15,6 +15,8 @@
 import os
 import subprocess
 import reticle_finder as rf
+import json_handler as jsh
+import eval_frame as eval
 import copy
 
 try:
@@ -54,7 +56,9 @@ useful_frame_ranges = [(1, 410), (570, 770), (1160, 1860), (2060, 2865), (3335, 
 #useful_frame_ranges = [(570, 770)]
 #useful_frame_ranges = [(3940, 4355)]
 #useful_frame_ranges = [(4200, 4355)]
-# useful_frame_ranges = [(2060, 2865), (3335, 3785), (3940, 4355)]
+useful_frame_ranges = [(2060, 2865), (3335, 3785), (3940, 4355)]
+# useful_frame_ranges = [(2500, 2865), (3335, 3785), (3940, 4355)]
+
 
 
 #-------------------------------------------------------------------------------
@@ -198,6 +202,14 @@ def findReticle(reticle_finder, screen_area_bgr):
 
     return reticle_finder.SearchForReticle(screen_area_bgr)
 
+def checkForEvalFrame(current_frame, evalIndex):
+
+    for index, frame in enumerate(evalIndex):
+        if frame == current_frame:
+            return True, index
+
+    return False, None
+
 
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
@@ -205,7 +217,15 @@ if __name__ == '__main__':
     # dumpFrames()            # One-off call to dump every 10th frame starting at 2500. So we can build up a dataset of reticles.
     # exit(0)
 
+    # Setup evaluation annotations
+    my_json_file = jsh.JSONFileHandler("data/eval/default.json")
 
+    eval_frames, eval_indexes = my_json_file.compileAnnotatedFrames()
+
+    yellow_gt_table = []
+    reticle_gt_table = []
+
+    #create ReticleFinder object
     reticle_finder = rf.ReticleFinder()
 
     cap, num_frames = openVideoFile(video_filepath)
@@ -233,10 +253,24 @@ if __name__ == '__main__':
 
             # Detect the yellow dots.
             yellow_dot_bboxes = findYellowDots(screen_area_hsv)
-            print("YellDot: ", yellow_dot_bboxes)
+            # print("YellDot: ", yellow_dot_bboxes)
 
             # Detect reticle
             bFound, reticle_x, reticle_y  = findReticle(reticle_finder, screen_area_bgr)
+
+            # Evaluation
+            is_eval_frame, obj_index = checkForEvalFrame(frame_number, eval_indexes) # Check if current frame has annotations made for it (for GT)
+
+            if is_eval_frame:
+                print(f"Found an eval frame on #{frame_number}")
+                current_eval_object = eval_frames[obj_index]
+
+                assert current_eval_object.getFNum() == frame_number # Robustness: making sure the correct evalFrame object is retrieved
+
+                yellow_gt_score, reticle_gt_score = current_eval_object.evaluateFrame(yellow_dot=yellow_dot_bboxes, reticle_t=bFound, reticle_coords=(reticle_x, reticle_y))
+
+                yellow_gt_table.append(yellow_gt_score)
+                reticle_gt_table.append(reticle_gt_score)
 
             # Draws circle around detected reticle (and centre dot)
             if bFound:
@@ -244,13 +278,14 @@ if __name__ == '__main__':
                 cv2.circle(screen_area_bgr, (reticle_x, reticle_y), 200, (255,0,0), 1)
 
             # Draw rectangles around yellow dots (with 5 pixel margin), with a centre dot, in red.
+            spc = 0
             for ybb in yellow_dot_bboxes:
                 x = ybb[0]
                 y = ybb[1]
                 w = ybb[2]
                 h = ybb[3]
                 cv2.circle(screen_area_bgr, (x + w//2, y + h//2), 1, (0,0,255), 1)
-                cv2.rectangle(screen_area_bgr, (x - 5, y - 5), (x + w + 5, y + h + 5), (0,0,255), 1)
+                cv2.rectangle(screen_area_bgr, (x - spc, y - spc), (x + w + spc, y + h + spc), (0, 0, 255), 1)
 
             cv2.imshow('screen_area_bgr', screen_area_bgr)
             #cv2.imshow('screen_area_bgr_blur', screen_area_bgr_blur)
@@ -262,7 +297,10 @@ if __name__ == '__main__':
     cv2.destroyAllWindows()
     progress_bar.close()
 
+    print(f"Yellow GT: {eval.percentageFromBools(yellow_gt_table)}", yellow_gt_table)
+    print(f"Reticle GT: {eval.percentageFromBools(reticle_gt_table)}", reticle_gt_table)
 
-    reticle_finder.PrintMaxValGraph()                                           # Print reticle max_val graph.
+
+    # reticle_finder.PrintMaxValGraph()                                           # Print reticle max_val graph.
 
     # All done.

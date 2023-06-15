@@ -1,6 +1,7 @@
 from eval_frame import EvalFrame
 import json
 
+# script written to take a
 
 class JSONFileHandler:
 
@@ -17,9 +18,6 @@ class JSONFileHandler:
     def openJSONFile(self):
         with open(self.jsonPath, "r") as json_file:
             self.json = json.load(json_file)
-
-            print("JSON Conv:",self.json)
-
             json_file.close()
 
     # Writes new data to JSON file, taking a Python dict
@@ -29,17 +27,19 @@ class JSONFileHandler:
 
             json_file.close()
 
+    # Function for taking an annotation (datumaru) JSON file and converting to annotation objects
     def compileAnnotatedFrames(self):
         evalFrames = []  # list of objects containing hand-annotated frames
+        evalFrameIndex = [] # list of corresponding frame number for searching
 
-        items = self.json.get('items')
-        for item in items:
-            frame_number, annotations = dictIterator(item, self.usefulKeys)
-            newFrame = EvalFrame(frame_number, annotations)
-            evalFrames.append(newFrame)
-            print(f"Frame Number: {frame_number},  Annotations: {annotations}")
+        items = self.json.get('items')  # isolate the items key which contains all frames and annotation values
+        for item in items:  # iterating through each frame in dataset
+            frame_number, annotations = dictIterator(item, self.usefulKeys)  # outputs extracted frame number and annotations (if any) per frame in json file
+            evalFrames.append(EvalFrame(frame_number, annotations))  # creates a new eval object for evalFrames[]
+            evalFrameIndex.append(frame_number)
+            # print(f"Frame Number: {frame_number},  Annotations: {annotations}")
 
-        return evalFrames
+        return evalFrames, evalFrameIndex
 
 # Dict iterator
 def dictIterator(passedDict, usefulKeys):
@@ -52,7 +52,7 @@ def dictIterator(passedDict, usefulKeys):
             if isinstance(value, dict):  # If found nested dict, run through it
                 dictIterator(value, usefulKeys)
 
-            elif isinstance(value, list):  # If found nested list, "
+            elif isinstance(value, list):  # If found nested list
                 if key == 'annotations' and value:  # Check if current key value has annotation
                     for annotation in value: # Ripping necessary information from CVAT Garbage
                         annotationDict = {}
@@ -86,7 +86,6 @@ def arrayIterator(passedArray, usefulKeys):
             arrayIterator(item, usefulKeys)
         elif isinstance(item, int):
             print("Found uncaught int")
-            pass
         else:
             raise TypeError("Unexpected item found in array")
 
@@ -95,7 +94,7 @@ def arrayIterator(passedArray, usefulKeys):
 if __name__ == "__main__":
     myJsonFile = JSONFileHandler("data/eval/default.json")
 
-    evalFrames = myJsonFile.compileAnnotatedFrames()
+    evalFrames, indexList = myJsonFile.compileAnnotatedFrames()
 
     print("--------------------------------------------------------------------------------------"
           "\n\n\n"
