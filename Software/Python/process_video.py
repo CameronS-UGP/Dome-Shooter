@@ -18,7 +18,7 @@ import reticle_finder as rf
 import json_handler as jsh
 import eval_frame as eval
 import copy
-from statistics import median
+from statistics import median, mean
 
 try:
     import cv2
@@ -342,11 +342,14 @@ if __name__ == '__main__':
     print(f"Yellow GT: {eval.percentageFromBools(yellow_gt_table)}", yellow_gt_table)
     print(f"Reticle GT: {eval.percentageFromBools(reticle_gt_table)}", reticle_gt_table)
 
+    reticle_acc_table.sort()
+
     max_ret_acc = max(reticle_acc_table)
     min_ret_acc = min(reticle_acc_table)
     med_ret_acc = median(reticle_acc_table)
+    avg_ret_acc = mean(reticle_acc_table)
 
-    print(f"Reticle Detection Accuracy:\nMax Val {max_ret_acc}, Min Val {min_ret_acc}, Median {med_ret_acc}")
+    print(f"Reticle Detection Accuracy:\nMax Val {max_ret_acc}, Min Val {min_ret_acc}, Median {med_ret_acc}, Mean {avg_ret_acc}")
 
     hits = score_table.count("HIT")
     score = hits / len(score_table) * 100
