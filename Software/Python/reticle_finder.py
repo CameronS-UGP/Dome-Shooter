@@ -50,8 +50,8 @@ class ReticleFinder:
         self.template_image = self.ExtractLabelledArea('data/Snapshots/screen_area_4020.tiff')
 
         # Show template to be sure.
-        cv2.imshow('template', self.template_image)
-        cv2.waitKey(0)
+        # cv2.imshow('template', self.template_image)
+        # cv2.waitKey(0)
 
         # Create a reticle mask
         mask_image_bgr = self.ExtractLabelledArea('data/Snapshots_reticle_on_dark_screen/screen_area_2870.tiff')
